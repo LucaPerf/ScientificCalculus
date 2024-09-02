@@ -1,8 +1,8 @@
-import PartOne.test as test
+import test
 
 test.test_dct_library()
 test.test_dct2_library()
 test.test_dct_homeMade()
 test.test_dct2_homeMade()
-times_scipy_dct, times_my_dct, matrix_dimensions = test.test_N()
-test.plot_dct_times(times_scipy_dct, times_my_dct, matrix_dimensions)
+test.get_times()
+test.plot_times()

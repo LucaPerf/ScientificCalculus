@@ -1,23 +1,24 @@
 import numpy as np
 from scipy.fft import dct
 
-def dct_homeMade(input_vector):
-    return dct_transform(len(input_vector), input_vector)
 
 def dct2_homeMade(matrix):
     N, M = matrix.shape
-    #assert N == M, "La matrice deve essere quadrata per garantire una complessità O(N^3)"
+    #assert N == M, "The matrix must be square to ensure O(N^3) complexity."
 
-    # Applicazione della DCT a ogni riga
+    # Application of DCT to each row
     result = np.copy(matrix.astype('float64'))
     for i in range(N):
         result[i, :] = dct_homeMade(result[i, :])
     
-    # Applicazione della DCT a ogni colonna
+    # Application of DCT to each column
     for j in range(M):
         result[:, j] = dct_homeMade(result[:, j])
     
     return result
+
+def dct_homeMade(input_vector):
+    return dct_transform(len(input_vector), input_vector)
 
 def dct_transform(n, vector):
     N = n
@@ -29,11 +30,7 @@ def dct_transform(n, vector):
     coeff = np.dot(base, vector)
     coeff[0] = coeff[0] / np.sqrt(N)
     coeff[1:] = coeff[1:] * np.sqrt(2 / N)
-    #for k in range(N):
-    #    if k == 0:
-    #        coeff[k] = coeff[k] / np.sqrt(N)
-    #    else:
-    #        coeff[k] = coeff[k] * np.sqrt(2 / N)
+    
     return coeff
 
 def dct_library(x):

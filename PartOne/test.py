@@ -1,5 +1,5 @@
 import numpy as np
-import utils
+from utils import dct2_homeMade, dct2_library, dct_library, dct_homeMade
 import timeit
 import matplotlib.pyplot as plt
 
@@ -20,70 +20,78 @@ first_row = np.array(
 
 def test_dct_library():
     print('--------------------------TEST DCT LIBRARY--------------------------')
-    dct_library_result = utils.dct_library(first_row)
+    dct_library_result = dct_library(first_row)
     formatted_dct = ["{:.2e}".format(val) for val in dct_library_result]
     print("DCT library results: \n", formatted_dct) 
 
 def test_dct2_library():
     print('--------------------------TEST DCT2 LIBRARY--------------------------')
-    dct2_library_result = utils.dct2_library(block_8x8)
+    dct2_library_result = dct2_library(block_8x8)
     np.set_printoptions(precision=2, suppress=False, formatter={'float': '{:0.2e}'.format})
     print("DCT2 Library results: \n", dct2_library_result)
 
 def test_dct_homeMade():
     print('--------------------------TEST DCT HOME MADE--------------------------')
-    dct = utils.dct_homeMade(first_row)
+    dct = dct_homeMade(first_row)
     formatted_dct = ["{:.2e}".format(val) for val in dct]
     print("DCT HomeMade results: \n", formatted_dct)
 
 def test_dct2_homeMade():
     print('--------------------------TEST DCT2 HOME MADE--------------------------')
-    dct2_homeMade = utils.dct2_homeMade(block_8x8)
+    dct2_hm = dct2_homeMade(block_8x8)
     np.set_printoptions(precision=2, suppress=False, formatter={'float': '{:0.2e}'.format})
-    print("DCT2 HomeMade results: \n", dct2_homeMade)
+    print("DCT2 HomeMade results: \n", dct2_hm)
 
-def test_N(): 
-    # Dimensioni delle matrici NxN (da 50 a 900 con passo 50)
-    matrix_dimensions = list(range(200, 1000, 50))
+# Matrix sizes for benchmarking
+sizes_matrix = [50, 100, 200, 400, 800]
 
-    times_scipy_dct = []
-    times_my_dct = []
+# Theoretical times based on complexity
+homeMade_theoretical_times = [n**3 for n in sizes_matrix]
+lib_theoretical_times = [n**2 * np.log(n) for n in sizes_matrix]
 
-    for n in matrix_dimensions:
-        print("Dimension: ", n)
+# Lists to store actual measured times
+homeMade_times = []
+lib_times = []
 
-        # Creazione di una matrice random
-        np.random.seed(5)
-        matrix = np.random.uniform(low=0.0, high=255.0, size=(n, n))
+# Generate a random N x N matrix with values ranging from 0 to 255.
+def random_matrix(N):
+    return np.random.randint(low=0, high=256, size=(N, N), dtype=np.uint8)
 
-        # Calcolo del tempo di esecuzione con scipy DCT2
-        time_scipy = timeit.timeit(lambda: utils.dct2_library(matrix), number=1)
-        times_scipy_dct.append(time_scipy)
+# Measure and print the execution times for custom and library DCT2 implementations.
+def get_times():
+    for size in sizes_matrix:
+        matrix = random_matrix(size)
+        print(f'--- Matrix {len(matrix)}x{len(matrix[0])} ---')
+        homeMade_times.append(timeit.timeit(lambda: dct2_homeMade(matrix), number=1))
+        print(f'Executed DCT2 homemade in {homeMade_times[-1]} sec')
+        lib_times.append(timeit.timeit(lambda: dct2_library(matrix), number=1))
+        print(f'Executed DCT2 Library in {lib_times[-1]} sec')
 
-        # Calcolo del tempo di esecuzione con la tua DCT2
-        time_my_dct = timeit.timeit(lambda: utils.dct2_homeMade(matrix), number=1)
-        times_my_dct.append(time_my_dct)
+# Scale theoretical times to practical times using a median-based scaling factor.
+def scale_theoretical_to_practical(theoretical, practical):
+    scaling_factor = np.median(np.array(practical) / np.array(theoretical))
+    return [t * scaling_factor for t in theoretical]
 
-    return times_scipy_dct, times_my_dct, matrix_dimensions
-
-def plot_dct_times(times_scipy_dct, times_my_dct, matrix_dimensions):
-    # Dividiamo per 10^6 in modo da visualizzare le righe di comparazione vicino alla riga 
-    n3 = [n**3 /1e5 for n in matrix_dimensions]    
-    n2_logn = [n**2 * np.log(n) / 1e8 for n in matrix_dimensions]
-
-    plt.figure(figsize=(10, 6))
-    plt.semilogy(matrix_dimensions, times_scipy_dct, label='Library DCT2', color="tab:green")
-    plt.semilogy(matrix_dimensions, n2_logn, label='n^2 * log(n)', color="tab:green", linestyle='dashed')
-    plt.semilogy(matrix_dimensions, times_my_dct, label='DCT2 created', color="tab:blue")
-    plt.semilogy(matrix_dimensions, n3, label='n^3', color="tab:blue", linestyle='dashed')
+# Plot the execution times on a semilog scale.
+def plot_times():
+    scaled_my_theoretical_times = scale_theoretical_to_practical(homeMade_theoretical_times, homeMade_times)
+    scaled_lib_theoretical_times = scale_theoretical_to_practical(lib_theoretical_times, lib_times)
     
-    plt.xlabel('Dimensione N')
-    plt.ylabel('Tempo di esecuzione in secondi')
-    plt.title('Tempi di esecuzione della DCT2 al variare della dimensione N')
+    plt.figure()
+    plt.semilogy(sizes_matrix, scaled_my_theoretical_times, color='darkgoldenrod', label='DCT2 HomeMade theoretical time', linestyle='dashed')
+    plt.semilogy(sizes_matrix, homeMade_times, color='orange', label='DCT2 HomeMade')
+    
+    plt.semilogy(sizes_matrix, scaled_lib_theoretical_times, color='tab:blue', label='DCT2 Library theoretical time', linestyle='dashed')
+    plt.semilogy(sizes_matrix, lib_times, color='tab:blue', label='DCT2 Library')
+    plt.xticks(sizes_matrix)
+    
+    plt.xlabel('Matrix dimension')
+    plt.ylabel('Time (s)')
+    plt.title('Time of DCT2 execution')
+    
     plt.legend()
     plt.grid(True)
 
-    # Salva l'immagine del grafico
-    #plt.savefig('Prima Parte/grafico_dct_times.png')
+    plt.savefig('PartOne/results/time_dct_graph.png')
 
     plt.show()
