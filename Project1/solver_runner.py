@@ -11,7 +11,7 @@ from ConjugateGradientExecuter import ConjugateGradientExecuter
 from GaussSeidelExecuter import GaussSeidelExecuter
 from GradientExecuter import GradientExecuter
 
-PATH = 'matrici'
+PATH = 'Project1/matrici'
 RESULTS_DIR = 'results'
 
 #current_dir = os.path.dirname(os.path.abspath(__file__))

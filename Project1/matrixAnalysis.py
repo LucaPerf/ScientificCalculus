@@ -73,7 +73,7 @@ def main():
     """
     Main function to execute analysis and plot graphs for each matrix.
     """
-    PATH = 'matrici'
+    PATH = 'Project1/matrici'
     
     # Get list of matrix file paths
     matrix_files = Utility.get_matrix_paths(PATH)
